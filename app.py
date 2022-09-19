@@ -15,20 +15,40 @@ environment = [item for item in df['environment'].unique().tolist()]
 season = [item for item in df['season'].unique().tolist()]
 
 
-
-external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
+external_stylesheets = [
+    {
+        "href": "https://fonts.googleapis.com/css2?"
+                "family=Lato:wght@400;700&display=swap",
+        "rel": "stylesheet",
+    },
+]
 
 app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 server = app.server
 
-app.layout = html.Div([
+app.title = "Soybean Public Biomass Experiment"
 
-    html.H4('Agronomy - Purdue University'),
+app.layout = html.Div(
+    children=[
+        html.Div(
+            children=[
+                html.P(children="", className="header-emoji"),
+                html.H1(
+                    children="Public Biomass Experiment", className="header-title"
+                ),
+                html.P(
+                    children= " Agronomy - Purdue University",
+                    className="header-description",
+                ),
 
-    html.Div((
-        html.H3('Public Biomass experiment season 2022')
-    ), style={'width': '60%', 'padding': '10px 40px 10px 20px'}),
+                html.P(
+                    children="Season 2022 ",
+                    className="header-description",
+                ),
+            ],
+            className="header",
+        ),
 
     # show plot menu
     html.Div(["season: ",
@@ -200,3 +220,4 @@ def update_graph(environment):
 
 if __name__ == '__main__':
     app.run_server(debug=True)
+
