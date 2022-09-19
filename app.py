@@ -3,6 +3,7 @@ import pandas as pd
 from datetime import date
 import plotly.express as px
 import numpy as np
+import base64
 
 # dataframe path
 fileName = ('LAI_ACRE_Biomass_y22.csv')
@@ -29,11 +30,13 @@ server = app.server
 
 app.title = "Soybean Public Biomass Experiment"
 
+image_filename = 'phys_icon.png'
+encoded_image = base64.b64encode(open(image_filename, 'rb').read())
+
 app.layout = html.Div(
     children=[
         html.Div(
             children=[
-                html.P(children="", className="header-emoji"),
                 html.H1(
                     children="Public Biomass Experiment", className="header-title"
                 ),
@@ -50,58 +53,95 @@ app.layout = html.Div(
             className="header",
         ),
 
-    # show plot menu
-    html.Div(["season: ",
-              dcc.Dropdown(
-                  id='season',
-                  options=[{'label': i, 'value': i} for i in season],
-                  value=season[0])
-              ], style={'width': '30%', 'display': 'inline-block', 'padding': '0px 20px 0px 50px'}),
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(children="Season", className="menu-title"),
+                        dcc.Dropdown(
+                            id='season',
+                            options=[{'label': i, 'value': i} for i in season],
+                            value=season[0]
+                        ),
 
-    # Show the boxplot
-    html.Div((
-        dcc.Graph(
-            id='box_plot'
-        )
-    ), style={'width': '70%', 'display': 'inline-block', 'padding': '0px 50px 0px 50px'}),
+                    ]
+                )
 
-    # Show the boxplot
-    html.Div((
-        dcc.Graph(
-            id='box_plot_source'
-        )
-    ), style={'width': '70%', 'display': 'inline-block', 'padding': '0px 50px 0px 50px'}),
+            ],
+            className="menu",
+        ),
 
-    # Show the boxplot
-    html.Div((
-        dcc.Graph(
-            id='box_plot_line'
-        )
-    ), style={'width': '70%', 'display': 'inline-block', 'padding': '0px 50px 0px 50px'}),
+        html.Div(
+            children=[
+                html.Div(
+                    children=dcc.Graph(
+                        id='box_plot', config={"displayModeBar": True},
+                    ),
+                    className="card",
+                ),
 
-    # show plot menu
-    html.Div(["Environment: ",
-              dcc.Dropdown(
-                  id='environment',
-                  options=[{'label': i, 'value': i} for i in environment],
-                  value=environment[0])
-              ], style={'width': '30%', 'display': 'inline-block', 'padding': '0px 20px 0px 50px'}),
+                html.Div(
+                    children=dcc.Graph(
+                        id='box_plot_source', config={"displayModeBar": True},
+                    ),
 
-    # Show the boxplot by enviroment
-    html.Div((
-        dcc.Graph(
-            id='box_plot_env_source'
-        )
-    ), style={'width': '70%', 'display': 'inline-block', 'padding': '0px 50px 0px 50px'}),
+                    className="card",
+                ),
 
-# Show the boxplot by enviroment
-    html.Div((
-        dcc.Graph(
-            id='box_plot_env_line'
-        )
-    ), style={'width': '70%', 'display': 'inline-block', 'padding': '0px 50px 0px 50px'})
+                html.Div(
+                    children=dcc.Graph(
+                        id='box_plot_line', config={"displayModeBar": True},
+                    ),
 
-])
+                    className="card",
+                ),
+
+            ],
+            className="wrapper",
+        ),
+
+        html.Div(
+            children=[
+                html.Div(
+                    children=[
+                        html.Div(children="Environment", className="menu-title"),
+                        dcc.Dropdown(
+                            id='environment',
+                            options=[{'label': i, 'value': i} for i in environment],
+                            value=environment[0]
+                        ),
+
+                    ]
+                )
+
+            ],
+            className="second_menu",
+        ),
+
+        html.Div(
+            children=[
+                html.Div(
+                    children=dcc.Graph(
+                        id='box_plot_env_source', config={"displayModeBar": True},
+                    ),
+                    className="card",
+                ),
+
+                html.Div(
+                    children=dcc.Graph(
+                        id='box_plot_env_line', config={"displayModeBar": True},
+                    ),
+
+                    className="card",
+                ),
+
+            ],
+            className="wrapper",
+        ),
+
+    ]
+)
+
 
 # Boxplot season
 @app.callback(
@@ -115,7 +155,8 @@ def update_graph(season):
 
 
     fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='environment',labels={
-                     "environment": "Date of planting"}, color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
+                     "environment": "Date of planting"},
+                 color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
 
     fig.update_layout(xaxis_title='Days after planting',
                       yaxis_title='Leaf area index ',
@@ -139,7 +180,7 @@ def update_graph(season):
 
 
     fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='source',labels={
-                     "source": "Source"}, color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
+                     "source": "Source"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
                       yaxis_title='Leaf area index ',
@@ -147,6 +188,9 @@ def update_graph(season):
                       font_size=20,
                       font_color='#000000',
                       font_family='Old Standard TT')
+
+
+    #fig.update_traces(line_color='black', line_width=1)
 
     return fig
 
@@ -162,7 +206,7 @@ def update_graph(season):
 
 
     fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='line',labels={
-                     "line": "Line"}, color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
+                     "line": "Line"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
                       yaxis_title='Leaf area index ',
@@ -186,7 +230,7 @@ def update_graph(environment):
 
 
     fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='source',labels={
-                     "source": "Source"}, color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
+                     "source": "Source"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
                       yaxis_title='Leaf area index ',
@@ -207,7 +251,7 @@ def update_graph(environment):
     dff = df[df['environment'] == environment]
 
     fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='line', labels={
-        "line": "Line"}, color_discrete_map={'Late': 'darkslategrey', 'Early': 'gray'})
+        "line": "Line"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
                       yaxis_title='Leaf area index ',
