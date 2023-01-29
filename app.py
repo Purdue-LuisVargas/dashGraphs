@@ -6,14 +6,17 @@ import numpy as np
 import base64
 
 # dataframe path
-fileName = ('LAI_ACRE_Biomass_y22.csv')
+#fileName = ('LAI_ACRE_Biomass_y22.csv')
+fileName = ('ACRE_Biomass_y22_clean.csv')
 df = pd.read_csv(fileName)
-df['DATE'] =  pd.to_datetime(df['DATE'], infer_datetime_format=True)
+df['date'] =  pd.to_datetime(df['date'], infer_datetime_format=True)
 
 # get the list of seasons for the selection menu
 environment = [item for item in df['environment'].unique().tolist()]
 
 season = [item for item in df['season'].unique().tolist()]
+
+variable = [item for item in df['variable_name'].unique().tolist()]
 
 
 external_stylesheets = [
@@ -44,11 +47,6 @@ app.layout = html.Div(
                     children= " Agronomy - Purdue University",
                     className="header-description",
                 ),
-
-                html.P(
-                    children="Season 2022 ",
-                    className="header-description",
-                ),
             ],
             className="header",
         ),
@@ -62,6 +60,18 @@ app.layout = html.Div(
                             id='season',
                             options=[{'label': i, 'value': i} for i in season],
                             value=season[0]
+                        ),
+
+                    ]
+                ),
+
+                html.Div(
+                    children=[
+                        html.Div(children="Variable", className="menu-title"),
+                        dcc.Dropdown(
+                            id='variable',
+                            options=[{'label': i, 'value': i} for i in variable],
+                            value=variable[0]
                         ),
 
                     ]
@@ -146,20 +156,29 @@ app.layout = html.Div(
 # Boxplot season
 @app.callback(
     Output('box_plot', 'figure'),
-    Input('season', 'value'))
+    Input('season', 'value'),
+    Input('variable', 'value'))
 
-def update_graph(season):
+def update_graph(season, variable):
     # create the graph
     # filter season
-    dff = df[df['season'] == season]
+    df_f = df[df['season'] == season]
 
+    # filter variable
+    dff = df_f[df_f['variable_name'] == variable]
 
-    fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='environment',labels={
+    # Get variable_units
+    units = [item for item in dff['variable_units'].unique()]
+
+    # create the yaxis_title
+    yaxis_title_value = variable + ' (' + units[0] + ')'
+
+    fig = px.box(dff, y=dff['variable_value'], x=dff['Days_after_planting'], color='environment',labels={
                      "environment": "Date of planting"},
                  color_discrete_map = {'Late':'darkslategrey','Early':'gray'})
 
     fig.update_layout(xaxis_title='Days after planting',
-                      yaxis_title='Leaf area index ',
+                      yaxis_title= yaxis_title_value,
                       plot_bgcolor='lavender',
                       font_size=20,
                       font_color='#000000',
@@ -171,19 +190,29 @@ def update_graph(season):
 # Boxplot season source
 @app.callback(
     Output('box_plot_source', 'figure'),
-    Input('season', 'value'))
+    Input('season', 'value'),
+    Input('variable', 'value'))
 
-def update_graph(season):
+def update_graph(season, variable):
     # create the graph
     # filter season
-    dff = df[df['season'] == season]
+    df_f = df[df['season'] == season]
+
+    # filter variable
+    dff = df_f[df_f['variable_name'] == variable]
+
+    # Get variable_units
+    units = [item for item in dff['variable_units'].unique()]
+
+    # create the yaxis_title
+    yaxis_title_value = variable + ' (' + units[0] + ')'
 
 
-    fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='source',labels={
+    fig = px.box(dff, y=dff['variable_value'], x=dff['Days_after_planting'], color='source',labels={
                      "source": "Source"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
-                      yaxis_title='Leaf area index ',
+                      yaxis_title=yaxis_title_value,
                       plot_bgcolor='lavender',
                       font_size=20,
                       font_color='#000000',
@@ -197,19 +226,29 @@ def update_graph(season):
 # Boxplot season line
 @app.callback(
     Output('box_plot_line', 'figure'),
-    Input('season', 'value'))
+    Input('season', 'value'),
+    Input('variable', 'value'))
 
-def update_graph(season):
+def update_graph(season, variable):
     # create the graph
     # filter season
-    dff = df[df['season'] == season]
+    df_f = df[df['season'] == season]
+
+    # filter variable
+    dff = df_f[df_f['variable_name'] == variable]
+
+    # Get variable_units
+    units = [item for item in dff['variable_units'].unique()]
+
+    # create the yaxis_title
+    yaxis_title_value = variable + ' (' + units[0] + ')'
 
 
-    fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='line',labels={
+    fig = px.box(dff, y=dff['variable_value'], x=dff['Days_after_planting'], color='line',labels={
                      "line": "Line"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
-                      yaxis_title='Leaf area index ',
+                      yaxis_title=yaxis_title_value,
                       plot_bgcolor='lavender',
                       font_size=20,
                       font_color='#000000',
@@ -221,19 +260,32 @@ def update_graph(season):
 # Boxplot environment
 @app.callback(
     Output('box_plot_env_source', 'figure'),
-    Input('environment', 'value'))
+    Input('environment', 'value'),
+    Input('season', 'value'),
+    Input('variable', 'value'))
 
-def update_graph(environment):
+def update_graph(environment, season, variable):
     # create the graph
     # filter season
-    dff = df[df['environment'] == environment]
+    df_env = df[df['environment'] == environment]
+
+    df_f = df_env[df_env['season'] == season]
+
+    # filter variable
+    dff = df_f[df_f['variable_name'] == variable]
+
+    # Get variable_units
+    units = [item for item in dff['variable_units'].unique()]
+
+    # create the yaxis_title
+    yaxis_title_value = variable + ' (' + units[0] + ')'
 
 
-    fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='source',labels={
+    fig = px.box(dff, y=dff['variable_value'], x=dff['Days_after_planting'], color='source',labels={
                      "source": "Source"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
-                      yaxis_title='Leaf area index ',
+                      yaxis_title=yaxis_title_value,
                       plot_bgcolor='lavender',
                       font_size=20,
                       font_color='#000000',
@@ -244,17 +296,31 @@ def update_graph(environment):
     # Boxplot environment
 @app.callback(
     Output('box_plot_env_line', 'figure'),
-    Input('environment', 'value'))
-def update_graph(environment):
+    Input('environment', 'value'),
+    Input('season', 'value'),
+    Input('variable', 'value'))
+
+def update_graph(environment, season, variable):
     # create the graph
     # filter season
-    dff = df[df['environment'] == environment]
+    df_env = df[df['environment'] == environment]
 
-    fig = px.box(dff, y=dff['LAI'], x=dff['Days_after_planting'], color='line', labels={
+    df_f = df_env[df_env['season'] == season]
+
+    # filter variable
+    dff = df_f[df_f['variable_name'] == variable]
+
+    # Get variable_units
+    units = [item for item in dff['variable_units'].unique()]
+
+    # create the yaxis_title
+    yaxis_title_value = variable + ' (' + units[0] + ')'
+
+    fig = px.box(dff, y=dff['variable_value'], x=dff['Days_after_planting'], color='line', labels={
         "line": "Line"}, template='simple_white')
 
     fig.update_layout(xaxis_title='Days after planting',
-                      yaxis_title='Leaf area index ',
+                      yaxis_title=yaxis_title_value,
                       plot_bgcolor='lavender',
                       font_size=20,
                       font_color='#000000',
