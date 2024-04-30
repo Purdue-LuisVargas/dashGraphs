@@ -1,17 +1,9 @@
-from dash import Dash, dcc, html, Input, Output, Patch, clientside_callback, callback
-import dash_bootstrap_components as dbc
-from dash_bootstrap_templates import load_figure_template
-import dash_mantine_components as dmc
+from dash import Dash, State, dcc, html, Input, Output, Patch, clientside_callback, callback
 import pandas as pd
-from datetime import date
 import plotly.express as px
-import numpy as np
 import base64
 import getpass
 import psycopg2
-
-# adds  templates to plotly.io
-load_figure_template(["minty", "minty_dark"])
 
 ### ----- functions -----
 def database_connection(**kwargs):
@@ -53,166 +45,120 @@ def database_connection(**kwargs):
 
     return connection, cursor
 
-### / ----- functions -----
+## / ----- functions -----
 
-# ### ----- database connection -----
-#
-# host = 'ep-dry-bonus-a5fb1uxb.us-east-2.aws.neon.tech'
-# dbname = 'experiments_data'
-# user = 'main_db_owner'
-# psw = 'VPqlabJfy4s6'
-#
-# # Establish a connection to the database
-# connection, cursor = database_connection(host = host, dbname = dbname, user = user, password = psw)
-#
-# ### /----- database connection -----
-#
-# ### ----- main data database query -----
-#
-# # Retrieve all records from the table main_table
-# sql_statement = """SELECT * FROM main_table"""
-#
-# # execute SQL query
-# cursor.execute(sql_statement)
-#
-# # Fetch query results
-# query_results = cursor.fetchall()
-#
-# # Create a DataFrame from query results
-# colnames = [desc[0] for desc in cursor.description]
-# data_frame = pd.DataFrame(data=query_results, columns=colnames)
-#
-# ### /----- database query -----
-#
-# ### ----- management_data database query -----
-#
-# # Retrieve all records from the table main_table
-# sql_statement = """SELECT * FROM management_data"""
-#
-# # execute SQL query
-# cursor.execute(sql_statement)
-#
-# # Fetch query results
-# query_results = cursor.fetchall()
-#
-# # Create a DataFrame from query results
-# colnames = [desc[0] for desc in cursor.description]
-# data_frame_dates = pd.DataFrame(data = query_results, columns = colnames)
-#
-# ### /----- management_data database query -----
-#
-# ### Close database connection
-# cursor.close()
-# connection.close()
-#
-#
-# ### ----- get the DAE column -----
-#
-# # Transform date into datatime
-# data_frame['date'] = pd.to_datetime(data_frame['date'])
-# data_frame_dates['date'] = pd.to_datetime(data_frame_dates['date'])
-#
-# data_frame_dates['date'] = pd.to_datetime(data_frame_dates['date'])
-#
-# # Define a function to find the appropriate date from data_frame_dates
-# def find_matching_date(row):
-#     matching_row = data_frame_dates[
-#         (data_frame_dates['experiment'] == row['experiment']) &
-#         (data_frame_dates['crop'] == row['crop']) &
-#         (data_frame_dates['treatment'] == row['treatment']) &
-#         (data_frame_dates['season'] == row['season'])
-#     ]
-#     return matching_row['date'].iloc[0] if not matching_row.empty else pd.NaT
-#
-# # Apply the function to each row in data_frame to find the matching date
-# data_frame_dae['matching_date'] = data_frame_dae.apply(find_matching_date, axis=1)
-#
-# # Calculate the difference in days and add it as a new column 'DAE'
-# data_frame_dae['DAE'] = (data_frame_dae['date'] - data_frame_dae['matching_date']).dt.days
-#
-# # Drop the 'matching_date' column as it's no longer needed
-# data_frame_dae.drop(columns=['matching_date'], inplace=True)
-#
-# ### /----- get the DAE column -----
+### ----- database connection -----
+
+host = 'ep-dry-bonus-a5fb1uxb.us-east-2.aws.neon.tech'
+dbname = 'experiments_data'
+user = 'main_db_owner'
+psw = 'VPqlabJfy4s6'
+
+# Establish a connection to the database
+connection, cursor = database_connection(host = host, dbname = dbname, user = user, password = psw)
+
+### /----- database connection -----
+
+### ----- main data database query -----
+
+# Retrieve all records from the table main_table
+sql_statement = """SELECT * FROM main_table"""
+
+# execute SQL query
+cursor.execute(sql_statement)
+
+# Fetch query results
+query_results = cursor.fetchall()
+
+# Create a DataFrame from query results
+colnames = [desc[0] for desc in cursor.description]
+data_frame = pd.DataFrame(data=query_results, columns=colnames)
+
+### /----- database query -----
+
+### ----- management_data database query -----
+
+# Retrieve all records from the table main_table
+sql_statement = """SELECT * FROM management_data"""
+
+# execute SQL query
+cursor.execute(sql_statement)
+
+# Fetch query results
+query_results = cursor.fetchall()
+
+# Create a DataFrame from query results
+colnames = [desc[0] for desc in cursor.description]
+data_frame_dates = pd.DataFrame(data = query_results, columns = colnames)
+
+### /----- management_data database query -----
+
+### Close database connection
+cursor.close()
+connection.close()
+
+
+### ----- get the DAE column -----
+
+# Transform date into datatime
+data_frame['date'] = pd.to_datetime(data_frame['date'])
+data_frame_dates['date'] = pd.to_datetime(data_frame_dates['date'])
+
+# Define a function to find the appropriate date from data_frame_dates
+def find_matching_date(row):
+    matching_row = data_frame_dates[
+        (data_frame_dates['experiment'] == row['experiment']) &
+        (data_frame_dates['crop'] == row['crop']) &
+        (data_frame_dates['treatment'] == row['treatment']) &
+        (data_frame_dates['season'] == row['season'])
+    ]
+    return matching_row['date'].iloc[0] if not matching_row.empty else pd.NaT
+
+# Apply the function to each row in data_frame to find the matching date
+data_frame['matching_date'] = data_frame.apply(find_matching_date, axis=1)
+
+# Calculate the difference in days and add it as a new column 'DAE'
+data_frame['DAE'] = (data_frame['date'] - data_frame['matching_date']).dt.days
+
+# Drop the 'matching_date' column as it's no longer needed
+data_frame.drop(columns=['matching_date'], inplace=True)
+
+df = data_frame
+
+### /----- get the DAE column -----
 
 
 # dataframe path
 #fileName = ('LAI_ACRE_Biomass_y22.csv')
-fileName = ('DAE.csv')
-df = pd.read_csv(fileName)
+# fileName = ('DAE.csv')
+# df = pd.read_csv(fileName)
 df['date'] =  pd.to_datetime(df['date'], infer_datetime_format=True)
 
 # get the list of seasons for the selection menu
 experiment = [item for item in df['experiment'].unique().tolist()]
 
-# external_stylesheets = [
-#     {
-#         "href": "https://fonts.googleapis.com/css2?"
-#                 "family=Lato:wght@400;700&display=swap",
-#         "rel": "stylesheet",
-#     },
-# ]
+external_stylesheets = [
+    {
+        "href": "https://fonts.googleapis.com/css2?"
+                "family=Lato:wght@400;700&display=swap",
+        "rel": "stylesheet",
+    },
+]
 
 # https://bootswatch.com/
-external_stylesheets = dbc.themes.SLATE
+#external_stylesheets = dbc.themes.DARKLY
 
-app = Dash(__name__, external_stylesheets=[external_stylesheets, dbc.icons.FONT_AWESOME])
+app = Dash(__name__, external_stylesheets=external_stylesheets)
 
 
 server = app.server
-
-PLOTLY_LOGO = "https://images.plot.ly/logo/new-branding/plotly-logomark.png"
 
 app.title = "Wang Lab"
 
 image_filename = 'phys_icon.png'
 encoded_image = base64.b64encode(open(image_filename, 'rb').read())
 
-search_bar = dbc.Row(
-    [
-        dbc.Col(dbc.Input(type="search", placeholder="Search")),
-        dbc.Col(
-            dbc.Button(
-                "Search", color="primary", className="ms-2", n_clicks=0
-            ),
-            width="auto",
-        ),
-    ],
-    className="g-0 ms-auto flex-nowrap mt-3 mt-md-0",
-    align="center",
-)
-
-navbar = dbc.Navbar(
-    dbc.Container(
-        [
-            html.A(
-                # Use row and col to control vertical alignment of logo / brand
-                dbc.Row(
-                    [
-                        dbc.Col(html.Img(src=PLOTLY_LOGO, height="30px")),
-                        dbc.Col(dbc.NavbarBrand("Navbar", className="ms-2")),
-                    ],
-                    align="center",
-                    className="g-0",
-                ),
-                href="https://plotly.com",
-                style={"textDecoration": "none"},
-            ),
-            dbc.NavbarToggler(id="navbar-toggler", n_clicks=0),
-            dbc.Collapse(
-                search_bar,
-                id="navbar-collapse",
-                is_open=False,
-                navbar=True,
-            ),
-        ]
-    ),
-    color="dark",
-    dark=True,
-)
-
-
-app.layout = dbc.Container(
+app.layout = html.Div(
     children=[
         html.Div(
             children=[
@@ -224,7 +170,7 @@ app.layout = dbc.Container(
                     className="header-description",
                 ),
             ],
-            className="bg-primary text-white p-4 mb-2 text-center",
+            className="header",
         ),
 
         html.Div(
@@ -494,30 +440,7 @@ def update_graph(treatment, season, variable):
 
     return fig
 
-@callback(
-    Output("graph", "figure"),
-    Input("color-mode-switch", "value"),
-)
-def update_figure_template(switch_on):
-    # When using Patch() to update the figure template, you must use the figure template dict
-    # from plotly.io  and not just the template name
-    template = pio.templates["minty"] if switch_on else pio.templates["minty_dark"]
-
-    patched_figure = Patch()
-    patched_figure["layout"]["template"] = template
-    return patched_figure
-
-
-clientside_callback(
-    """
-    (switchOn) => {
-       document.documentElement.setAttribute('data-bs-theme', switchOn ? 'light' : 'dark');  
-       return window.dash_clientside.no_update
-    }
-    """,
-    Output("color-mode-switch", "id"),
-    Input("color-mode-switch", "value"),
-)
+# add callback for toggling the collapse on small screens
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)
