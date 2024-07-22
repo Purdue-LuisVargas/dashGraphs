@@ -181,8 +181,9 @@ app.layout = html.Div(
                         html.Div(children="Experiment", className="menu-title"),
                         dcc.Dropdown(
                             id='experiment',
-                            options=[{'label': i, 'value': i} for i in df['experiment'].unique()],
-                            value=df['experiment'].iloc[0]
+                            options=[{'label': i, 'value': i} for i in experiment],
+                            value=df['experiment'].iloc[0],
+                            className='wide-dropdown'
                         ),
                     ]
                 ),
@@ -192,7 +193,7 @@ app.layout = html.Div(
                         html.Div(children="Season", className="menu-title"),
                         dcc.Dropdown(
                             id='season',
-                            options=[{'label': i, 'value': i} for i in df['season'].unique()],
+                            #options=[{'label': i, 'value': i} for i in df['season'].unique()],
                             value=df['season'].iloc[0]
                         ),
                     ]
@@ -277,7 +278,6 @@ app.layout = html.Div(
 
     ]
 )
-
 
 # Define callback to update season dropdown options based on selected experiment
 @app.callback(
