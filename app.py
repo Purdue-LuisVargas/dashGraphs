@@ -1,4 +1,4 @@
-from dash import Dash, State, dcc, html, Input, Output, Patch, clientside_callback, callback
+from dash import Dash,  dcc, html, Input, Output
 import pandas as pd
 import plotly.express as px
 import base64
@@ -51,8 +51,8 @@ def database_connection(**kwargs):
 
 host = 'ep-dry-bonus-a5fb1uxb.us-east-2.aws.neon.tech'
 dbname = 'experiments_data'
-user = 'main_db_owner'
-psw = 'VPqlabJfy4s6'
+user = 'readonly_rice'
+psw = 'riceG6d92k%e'
 
 # Establish a connection to the database
 connection, cursor = database_connection(host = host, dbname = dbname, user = user, password = psw)
@@ -62,7 +62,8 @@ connection, cursor = database_connection(host = host, dbname = dbname, user = us
 ### ----- main data database query -----
 
 # Retrieve all records from the table main_table
-sql_statement = """SELECT * FROM main_table"""
+#sql_statement = """SELECT * FROM main_table"""
+sql_statement = """SELECT * FROM public.rice_main_table"""
 
 # execute SQL query
 cursor.execute(sql_statement)
